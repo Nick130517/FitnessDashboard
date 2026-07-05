@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
+  Alert,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -14,10 +16,12 @@ import {
   addWorkout,
   deleteMeal,
   deleteWorkout,
+  formatRelativeDate,
   getRecentMeals,
   getRecentWorkouts,
   getTodayStats,
   initDatabase,
+  pruneOldData,
   seedIfEmpty,
 } from '../../db/db';
 
@@ -33,6 +37,23 @@ function ListSection({ title, children, onAddPress }) {
       {children}
     </View>
   );
+}
+
+function EmptyState({ message }) {
+  return (
+    <View style={styles.emptyState}>
+      <Text style={styles.emptyStateText}>{message}</Text>
+    </View>
+  );
+}
+
+function getFormattedHeaderDate() {
+  const now = new Date();
+  return now.toLocaleDateString('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
 }
 
 // Mock weekly trend data — will become real once we store daily historical
@@ -56,6 +77,7 @@ export default function DashboardScreen() {
   const [meals, setMeals] = useState([]);
   const [workoutModalVisible, setWorkoutModalVisible] = useState(false);
   const [mealModalVisible, setMealModalVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const refreshData = useCallback(() => {
     setStats(getTodayStats());
@@ -65,8 +87,16 @@ export default function DashboardScreen() {
 
   useEffect(() => {
     initDatabase();
+    pruneOldData();
     seedIfEmpty();
     refreshData();
+  }, [refreshData]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    refreshData();
+    // Small delay so the refresh spinner is visible even on very fast local reads
+    setTimeout(() => setRefreshing(false), 400);
   }, [refreshData]);
 
   const handleAddWorkout = (name, durationMin) => {
@@ -79,14 +109,40 @@ export default function DashboardScreen() {
     refreshData();
   };
 
-  const handleDeleteWorkout = (id) => {
-    deleteWorkout(id);
-    refreshData();
+  const handleDeleteWorkout = (id, name) => {
+    Alert.alert(
+      'Delete Workout',
+      `Remove "${name}" from your workouts?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            deleteWorkout(id);
+            refreshData();
+          },
+        },
+      ]
+    );
   };
 
-  const handleDeleteMeal = (id) => {
-    deleteMeal(id);
-    refreshData();
+  const handleDeleteMeal = (id, name) => {
+    Alert.alert(
+      'Delete Meal',
+      `Remove "${name}" from your meals?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            deleteMeal(id);
+            refreshData();
+          },
+        },
+      ]
+    );
   };
 
   // Placeholder heart rate & distance until HealthKit/Health Connect sync (component 2)
@@ -95,9 +151,19 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#4ADE80"
+            colors={['#4ADE80']}
+          />
+        }
+      >
         <Text style={styles.header}>Dashboard</Text>
-        <Text style={styles.subHeader}>Health Overview</Text>
+        <Text style={styles.subHeader}>{getFormattedHeaderDate()}</Text>
 
         <View style={styles.ringGrid}>
           <RingCard
@@ -146,35 +212,43 @@ export default function DashboardScreen() {
         </View>
 
         <ListSection title="Recent Workouts" onAddPress={() => setWorkoutModalVisible(true)}>
-          {workouts.map((w) => (
-            <TouchableOpacity
-              key={w.id}
-              style={styles.listRow}
-              onLongPress={() => handleDeleteWorkout(w.id)}
-            >
-              <View>
-                <Text style={styles.listRowTitle}>{w.name}</Text>
-                <Text style={styles.listRowSubtitle}>{w.date}</Text>
-              </View>
-              <Text style={styles.listRowValue}>{w.duration_min} min</Text>
-            </TouchableOpacity>
-          ))}
+          {workouts.length === 0 ? (
+            <EmptyState message="No workouts yet — tap + Add to log one" />
+          ) : (
+            workouts.map((w) => (
+              <TouchableOpacity
+                key={w.id}
+                style={styles.listRow}
+                onLongPress={() => handleDeleteWorkout(w.id, w.name)}
+              >
+                <View>
+                  <Text style={styles.listRowTitle}>{w.name}</Text>
+                  <Text style={styles.listRowSubtitle}>{formatRelativeDate(w.date)}</Text>
+                </View>
+                <Text style={styles.listRowValue}>{w.duration_min} min</Text>
+              </TouchableOpacity>
+            ))
+          )}
         </ListSection>
 
         <ListSection title="Recent Meals" onAddPress={() => setMealModalVisible(true)}>
-          {meals.map((m) => (
-            <TouchableOpacity
-              key={m.id}
-              style={styles.listRow}
-              onLongPress={() => handleDeleteMeal(m.id)}
-            >
-              <View>
-                <Text style={styles.listRowTitle}>{m.name}</Text>
-                <Text style={styles.listRowSubtitle}>{m.time}</Text>
-              </View>
-              <Text style={styles.listRowValue}>{m.calories} kcal</Text>
-            </TouchableOpacity>
-          ))}
+          {meals.length === 0 ? (
+            <EmptyState message="No meals logged yet — tap + Add to log one" />
+          ) : (
+            meals.map((m) => (
+              <TouchableOpacity
+                key={m.id}
+                style={styles.listRow}
+                onLongPress={() => handleDeleteMeal(m.id, m.name)}
+              >
+                <View>
+                  <Text style={styles.listRowTitle}>{m.name}</Text>
+                  <Text style={styles.listRowSubtitle}>{m.time} · {formatRelativeDate(m.date)}</Text>
+                </View>
+                <Text style={styles.listRowValue}>{m.calories} kcal</Text>
+              </TouchableOpacity>
+            ))
+          )}
         </ListSection>
       </ScrollView>
 
@@ -278,5 +352,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#4ADE80',
+  },
+  emptyState: {
+    backgroundColor: '#1A1D24',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  emptyStateText: {
+    color: '#6B7280',
+    fontSize: 13,
+    textAlign: 'center',
   },
 });
