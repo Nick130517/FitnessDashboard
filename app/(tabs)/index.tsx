@@ -1,3 +1,5 @@
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
@@ -25,11 +27,14 @@ import {
   seedIfEmpty,
 } from '../../db/db';
 
-function ListSection({ title, children, onAddPress }) {
+function ListSection({ title, icon, children, onAddPress }) {
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>{title}</Text>
+        <View style={styles.sectionTitleRow}>
+          <Ionicons name={icon} size={16} color="#8B93A7" style={{ marginRight: 6 }} />
+          <Text style={styles.sectionTitle}>{title}</Text>
+        </View>
         <TouchableOpacity onPress={onAddPress} style={styles.addButton}>
           <Text style={styles.addButtonText}>+ Add</Text>
         </TouchableOpacity>
@@ -43,6 +48,15 @@ function EmptyState({ message }) {
   return (
     <View style={styles.emptyState}>
       <Text style={styles.emptyStateText}>{message}</Text>
+    </View>
+  );
+}
+
+function PanelHeader({ icon, title }) {
+  return (
+    <View style={styles.panelHeaderRow}>
+      <Ionicons name={icon} size={16} color="#8B93A7" style={{ marginRight: 6 }} />
+      <Text style={styles.panelTitle}>{title}</Text>
     </View>
   );
 }
@@ -66,9 +80,9 @@ const mockWeeklyTrend = {
 // Mock activity breakdown — will become real once workouts have a "type" field.
 const mockActivityBreakdown = [
   { label: 'Running', value: 35, color: '#4ADE80' },
-  { label: 'Swimming', value: 20, color: '#F87171' },
+  { label: 'Swimming', value: 20, color: '#38BDF8' },
   { label: 'Cycling', value: 25, color: '#FBBF24' },
-  { label: 'Walking', value: 20, color: '#60A5FA' },
+  { label: 'Walking', value: 20, color: '#818CF8' },
 ];
 
 export default function DashboardScreen() {
@@ -95,7 +109,6 @@ export default function DashboardScreen() {
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     refreshData();
-    // Small delay so the refresh spinner is visible even on very fast local reads
     setTimeout(() => setRefreshing(false), 400);
   }, [refreshData]);
 
@@ -110,39 +123,31 @@ export default function DashboardScreen() {
   };
 
   const handleDeleteWorkout = (id, name) => {
-    Alert.alert(
-      'Delete Workout',
-      `Remove "${name}" from your workouts?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            deleteWorkout(id);
-            refreshData();
-          },
+    Alert.alert('Delete Workout', `Remove "${name}" from your workouts?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          deleteWorkout(id);
+          refreshData();
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleDeleteMeal = (id, name) => {
-    Alert.alert(
-      'Delete Meal',
-      `Remove "${name}" from your meals?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            deleteMeal(id);
-            refreshData();
-          },
+    Alert.alert('Delete Meal', `Remove "${name}" from your meals?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          deleteMeal(id);
+          refreshData();
         },
-      ]
-    );
+      },
+    ]);
   };
 
   // Placeholder heart rate & distance until HealthKit/Health Connect sync (component 2)
@@ -150,140 +155,161 @@ export default function DashboardScreen() {
   const distanceKm = 3.8;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor="#4ADE80"
-            colors={['#4ADE80']}
-          />
-        }
-      >
-        <Text style={styles.header}>Dashboard</Text>
-        <Text style={styles.subHeader}>{getFormattedHeaderDate()}</Text>
+    <LinearGradient colors={['#0B0F1E', '#0E1326', '#0B0F1E']} style={styles.gradientBg}>
+      <SafeAreaView style={styles.container}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#4ADE80"
+              colors={['#4ADE80']}
+            />
+          }
+        >
+          <Text style={styles.header}>Dashboard</Text>
+          <Text style={styles.subHeader}>{getFormattedHeaderDate()}</Text>
 
-        <View style={styles.ringGrid}>
-          <RingCard
-            label="Heart Rate"
-            value={heartRate}
-            unit="bpm"
-            progress={(heartRate / 120) * 100}
-            color="#F87171"
-          />
-          <RingCard
-            label="Calories Burn"
-            value={stats.caloriesBurned}
-            unit="kcal"
-            progress={(stats.caloriesBurned / 3000) * 100}
-            color="#FBBF24"
-          />
-          <RingCard
-            label="Steps"
-            value={stats.steps > 999 ? `${(stats.steps / 1000).toFixed(1)}k` : stats.steps}
-            unit="steps"
-            progress={(stats.steps / 10000) * 100}
-            color="#4ADE80"
-          />
-          <RingCard
-            label="Distance"
-            value={distanceKm}
-            unit="km"
-            progress={(distanceKm / 8) * 100}
-            color="#60A5FA"
-          />
-        </View>
+          <View style={styles.ringGrid}>
+            <RingCard
+              id="heartrate"
+              label="Heart Rate"
+              value={heartRate}
+              unit="bpm"
+              progress={(heartRate / 120) * 100}
+              colors={['#FB7185', '#F43F5E']}
+              icon="heart"
+            />
+            <RingCard
+              id="calburn"
+              label="Calories Burn"
+              value={stats.caloriesBurned}
+              unit="kcal"
+              progress={(stats.caloriesBurned / 3000) * 100}
+              colors={['#FBBF24', '#F59E0B']}
+              icon="flame"
+            />
+            <RingCard
+              id="steps"
+              label="Steps"
+              value={stats.steps > 999 ? `${(stats.steps / 1000).toFixed(1)}k` : stats.steps}
+              unit="steps"
+              progress={(stats.steps / 10000) * 100}
+              colors={['#4ADE80', '#22C55E']}
+              icon="walk"
+            />
+            <RingCard
+              id="distance"
+              label="Distance"
+              value={distanceKm}
+              unit="km"
+              progress={(distanceKm / 8) * 100}
+              colors={['#38BDF8', '#3B82F6']}
+              icon="navigate"
+            />
+          </View>
 
-        <View style={styles.panel}>
-          <Text style={styles.panelTitle}>Activity Chart</Text>
-          <ActivityChart
-            series={[
-              { label: 'Steps', color: '#4ADE80', data: mockWeeklyTrend.steps },
-              { label: 'Calories', color: '#60A5FA', data: mockWeeklyTrend.calories },
-            ]}
-          />
-        </View>
+          <LinearGradient colors={['#151B30', '#10152A']} style={styles.panel}>
+            <PanelHeader icon="stats-chart" title="Activity Chart" />
+            <ActivityChart
+              series={[
+                { label: 'Steps', color: '#4ADE80', data: mockWeeklyTrend.steps },
+                { label: 'Calories', color: '#38BDF8', data: mockWeeklyTrend.calories },
+              ]}
+            />
+          </LinearGradient>
 
-        <View style={styles.panel}>
-          <Text style={styles.panelTitle}>Activity Rating</Text>
-          <ActivityDonut segments={mockActivityBreakdown} />
-        </View>
+          <LinearGradient colors={['#151B30', '#10152A']} style={styles.panel}>
+            <PanelHeader icon="pie-chart" title="Activity Rating" />
+            <ActivityDonut segments={mockActivityBreakdown} />
+          </LinearGradient>
 
-        <ListSection title="Recent Workouts" onAddPress={() => setWorkoutModalVisible(true)}>
-          {workouts.length === 0 ? (
-            <EmptyState message="No workouts yet — tap + Add to log one" />
-          ) : (
-            workouts.map((w) => (
-              <TouchableOpacity
-                key={w.id}
-                style={styles.listRow}
-                onLongPress={() => handleDeleteWorkout(w.id, w.name)}
-              >
-                <View>
-                  <Text style={styles.listRowTitle}>{w.name}</Text>
-                  <Text style={styles.listRowSubtitle}>{formatRelativeDate(w.date)}</Text>
-                </View>
-                <Text style={styles.listRowValue}>{w.duration_min} min</Text>
-              </TouchableOpacity>
-            ))
-          )}
-        </ListSection>
+          <ListSection title="Recent Workouts" icon="barbell" onAddPress={() => setWorkoutModalVisible(true)}>
+            {workouts.length === 0 ? (
+              <EmptyState message="No workouts yet — tap + Add to log one" />
+            ) : (
+              workouts.map((w) => (
+                <TouchableOpacity
+                  key={w.id}
+                  style={styles.listRow}
+                  onLongPress={() => handleDeleteWorkout(w.id, w.name)}
+                >
+                  <View style={[styles.accentBar, { backgroundColor: '#4ADE80' }]} />
+                  <View style={styles.listRowIconBadge}>
+                    <Ionicons name="barbell" size={16} color="#4ADE80" />
+                  </View>
+                  <View style={styles.listRowTextGroup}>
+                    <Text style={styles.listRowTitle}>{w.name}</Text>
+                    <Text style={styles.listRowSubtitle}>{formatRelativeDate(w.date)}</Text>
+                  </View>
+                  <Text style={styles.listRowValue}>{w.duration_min} min</Text>
+                </TouchableOpacity>
+              ))
+            )}
+          </ListSection>
 
-        <ListSection title="Recent Meals" onAddPress={() => setMealModalVisible(true)}>
-          {meals.length === 0 ? (
-            <EmptyState message="No meals logged yet — tap + Add to log one" />
-          ) : (
-            meals.map((m) => (
-              <TouchableOpacity
-                key={m.id}
-                style={styles.listRow}
-                onLongPress={() => handleDeleteMeal(m.id, m.name)}
-              >
-                <View>
-                  <Text style={styles.listRowTitle}>{m.name}</Text>
-                  <Text style={styles.listRowSubtitle}>{m.time} · {formatRelativeDate(m.date)}</Text>
-                </View>
-                <Text style={styles.listRowValue}>{m.calories} kcal</Text>
-              </TouchableOpacity>
-            ))
-          )}
-        </ListSection>
-      </ScrollView>
+          <ListSection title="Recent Meals" icon="restaurant" onAddPress={() => setMealModalVisible(true)}>
+            {meals.length === 0 ? (
+              <EmptyState message="No meals logged yet — tap + Add to log one" />
+            ) : (
+              meals.map((m) => (
+                <TouchableOpacity
+                  key={m.id}
+                  style={styles.listRow}
+                  onLongPress={() => handleDeleteMeal(m.id, m.name)}
+                >
+                  <View style={[styles.accentBar, { backgroundColor: '#FBBF24' }]} />
+                  <View style={[styles.listRowIconBadge, { backgroundColor: 'rgba(251,191,36,0.14)' }]}>
+                    <Ionicons name="restaurant" size={16} color="#FBBF24" />
+                  </View>
+                  <View style={styles.listRowTextGroup}>
+                    <Text style={styles.listRowTitle}>{m.name}</Text>
+                    <Text style={styles.listRowSubtitle}>{m.time} · {formatRelativeDate(m.date)}</Text>
+                  </View>
+                  <Text style={styles.listRowValue}>{m.calories} kcal</Text>
+                </TouchableOpacity>
+              ))
+            )}
+          </ListSection>
+        </ScrollView>
 
-      <AddWorkoutModal
-        visible={workoutModalVisible}
-        onClose={() => setWorkoutModalVisible(false)}
-        onSave={handleAddWorkout}
-      />
-      <AddMealModal
-        visible={mealModalVisible}
-        onClose={() => setMealModalVisible(false)}
-        onSave={handleAddMeal}
-      />
-    </SafeAreaView>
+        <AddWorkoutModal
+          visible={workoutModalVisible}
+          onClose={() => setWorkoutModalVisible(false)}
+          onSave={handleAddWorkout}
+        />
+        <AddMealModal
+          visible={mealModalVisible}
+          onClose={() => setMealModalVisible(false)}
+          onSave={handleAddMeal}
+        />
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
+  gradientBg: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#0F1115',
   },
   scrollContent: {
     padding: 20,
     paddingBottom: 40,
   },
   header: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontSize: 27,
+    fontWeight: '800',
+    color: '#F5F7FA',
+    letterSpacing: -0.5,
   },
   subHeader: {
     fontSize: 14,
-    color: '#9CA3AF',
-    marginBottom: 16,
+    color: '#6B7280',
+    marginBottom: 18,
   },
   ringGrid: {
     flexDirection: 'row',
@@ -291,18 +317,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   panel: {
-    backgroundColor: '#1A1D24',
-    borderRadius: 14,
+    borderRadius: 18,
     padding: 16,
     marginBottom: 16,
     marginTop: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  panelHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
   },
   panelTitle: {
-    color: '#FFFFFF',
+    color: '#F5F7FA',
     fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 12,
-    letterSpacing: 0.5,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   section: {
     marginBottom: 24,
@@ -313,51 +344,77 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#F5F7FA',
   },
   addButton: {
-    backgroundColor: '#1A1D24',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 8,
     paddingVertical: 6,
     paddingHorizontal: 12,
   },
   addButtonText: {
     color: '#4ADE80',
-    fontWeight: '600',
+    fontWeight: '700',
     fontSize: 13,
   },
   listRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#1A1D24',
-    borderRadius: 10,
-    padding: 14,
+    backgroundColor: '#141A2C',
+    borderRadius: 12,
+    padding: 12,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+    overflow: 'hidden',
+  },
+  accentBar: {
+    width: 3,
+    alignSelf: 'stretch',
+    borderRadius: 2,
+    marginRight: 10,
+  },
+  listRowIconBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: 'rgba(74,222,128,0.14)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  listRowTextGroup: {
+    flex: 1,
   },
   listRowTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#F5F7FA',
   },
   listRowSubtitle: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#6B7280',
     marginTop: 2,
   },
   listRowValue: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#4ADE80',
+    fontWeight: '700',
+    color: '#F5F7FA',
   },
   emptyState: {
-    backgroundColor: '#1A1D24',
-    borderRadius: 10,
+    backgroundColor: '#141A2C',
+    borderRadius: 12,
     padding: 20,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   emptyStateText: {
     color: '#6B7280',

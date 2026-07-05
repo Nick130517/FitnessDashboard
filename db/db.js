@@ -56,6 +56,47 @@ export function initDatabase() {
       protein_g INTEGER
     );
   `);
+
+  db.execSync(`
+    CREATE TABLE IF NOT EXISTS profile (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      weight_kg REAL,
+      height_cm REAL
+    );
+  `);
+
+  // Safe migration: adds new columns if this table was created before they existed.
+  // SQLite has no "ADD COLUMN IF NOT EXISTS", so we just try and ignore the error
+  // if the column is already there.
+  try { db.execSync("ALTER TABLE profile ADD COLUMN sex TEXT;"); } catch (e) {}
+  try { db.execSync("ALTER TABLE profile ADD COLUMN units TEXT DEFAULT 'metric';"); } catch (e) {}
+}
+
+export function getProfile() {
+  const row = db.getFirstSync('SELECT * FROM profile WHERE id = 1;');
+  return row || { weight_kg: null, height_cm: null, sex: null, units: 'metric' };
+}
+
+export function setProfile(weightKg, heightCm, sex, units) {
+  db.runSync(
+    `INSERT INTO profile (id, weight_kg, height_cm, sex, units) VALUES (1, ?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET
+       weight_kg = excluded.weight_kg,
+       height_cm = excluded.height_cm,
+       sex = excluded.sex,
+       units = excluded.units;`,
+    [weightKg, heightCm, sex, units]
+  );
+}
+
+// Deletes all workout history only. Meals and profile settings are untouched.
+export function clearAllWorkouts() {
+  db.runSync('DELETE FROM workouts;');
+}
+
+// Deletes all meal history only. Workouts and profile settings are untouched.
+export function clearAllMeals() {
+  db.runSync('DELETE FROM meals;');
 }
 
 // Deletes any workout or meal older than RETENTION_DAYS. Since dates are
