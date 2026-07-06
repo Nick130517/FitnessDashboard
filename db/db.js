@@ -57,6 +57,9 @@ export function initDatabase() {
     );
   `);
 
+  // Safe migration: adds notes column to meals if this table predates it.
+  try { db.execSync("ALTER TABLE meals ADD COLUMN notes TEXT;"); } catch (e) {}
+
   db.execSync(`
     CREATE TABLE IF NOT EXISTS profile (
       id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -143,8 +146,24 @@ export function getRecentWorkouts(limit = 5) {
   return db.getAllSync('SELECT * FROM workouts ORDER BY id DESC LIMIT ?;', [limit]);
 }
 
+export function getWorkoutById(id) {
+  return db.getFirstSync('SELECT * FROM workouts WHERE id = ?;', [id]);
+}
+
+export function updateWorkoutNotes(id, notes) {
+  db.runSync('UPDATE workouts SET notes = ? WHERE id = ?;', [notes, id]);
+}
+
 export function getRecentMeals(limit = 5) {
   return db.getAllSync('SELECT * FROM meals ORDER BY id DESC LIMIT ?;', [limit]);
+}
+
+export function getMealById(id) {
+  return db.getFirstSync('SELECT * FROM meals WHERE id = ?;', [id]);
+}
+
+export function updateMealNotes(id, notes) {
+  db.runSync('UPDATE meals SET notes = ? WHERE id = ?;', [notes, id]);
 }
 
 // Only counts meals logged with today's real date — this is what makes the

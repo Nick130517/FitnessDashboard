@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
@@ -12,10 +13,7 @@ import {
   View,
 } from 'react-native';
 import { ActivityChart, ActivityDonut, RingCard } from '../../components/DashboardWidgets';
-import { AddMealModal, AddWorkoutModal } from '../../components/Modals';
 import {
-  addMeal,
-  addWorkout,
   deleteMeal,
   deleteWorkout,
   formatRelativeDate,
@@ -27,7 +25,9 @@ import {
   seedIfEmpty,
 } from '../../db/db';
 
-function ListSection({ title, icon, children, onAddPress }) {
+const RECENT_LIMIT = 3;
+
+function ListSection({ title, icon, children, onSeeAllPress }) {
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeaderRow}>
@@ -35,8 +35,9 @@ function ListSection({ title, icon, children, onAddPress }) {
           <Ionicons name={icon} size={16} color="#8B93A7" style={{ marginRight: 6 }} />
           <Text style={styles.sectionTitle}>{title}</Text>
         </View>
-        <TouchableOpacity onPress={onAddPress} style={styles.addButton}>
-          <Text style={styles.addButtonText}>+ Add</Text>
+        <TouchableOpacity onPress={onSeeAllPress} style={styles.seeAllButton}>
+          <Text style={styles.seeAllText}>See all</Text>
+          <Ionicons name="chevron-forward" size={14} color="#4ADE80" />
         </TouchableOpacity>
       </View>
       {children}
@@ -86,17 +87,16 @@ const mockActivityBreakdown = [
 ];
 
 export default function DashboardScreen() {
+  const router = useRouter();
   const [stats, setStats] = useState({ steps: 0, caloriesBurned: 0, caloriesConsumed: 0, proteinG: 0 });
   const [workouts, setWorkouts] = useState([]);
   const [meals, setMeals] = useState([]);
-  const [workoutModalVisible, setWorkoutModalVisible] = useState(false);
-  const [mealModalVisible, setMealModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const refreshData = useCallback(() => {
     setStats(getTodayStats());
-    setWorkouts(getRecentWorkouts());
-    setMeals(getRecentMeals());
+    setWorkouts(getRecentWorkouts(RECENT_LIMIT));
+    setMeals(getRecentMeals(RECENT_LIMIT));
   }, []);
 
   useEffect(() => {
@@ -111,16 +111,6 @@ export default function DashboardScreen() {
     refreshData();
     setTimeout(() => setRefreshing(false), 400);
   }, [refreshData]);
-
-  const handleAddWorkout = (name, durationMin) => {
-    addWorkout(name, durationMin);
-    refreshData();
-  };
-
-  const handleAddMeal = (name, time, calories, proteinG) => {
-    addMeal(name, time, calories, proteinG);
-    refreshData();
-  };
 
   const handleDeleteWorkout = (id, name) => {
     Alert.alert('Delete Workout', `Remove "${name}" from your workouts?`, [
@@ -225,14 +215,15 @@ export default function DashboardScreen() {
             <ActivityDonut segments={mockActivityBreakdown} />
           </LinearGradient>
 
-          <ListSection title="Recent Workouts" icon="barbell" onAddPress={() => setWorkoutModalVisible(true)}>
+          <ListSection title="Recent Workouts" icon="barbell" onSeeAllPress={() => router.push('/planner')}>
             {workouts.length === 0 ? (
-              <EmptyState message="No workouts yet — tap + Add to log one" />
+              <EmptyState message="No workouts yet — head to Planner to log one" />
             ) : (
               workouts.map((w) => (
                 <TouchableOpacity
                   key={w.id}
                   style={styles.listRow}
+                  onPress={() => router.push(`/workout/${w.id}`)}
                   onLongPress={() => handleDeleteWorkout(w.id, w.name)}
                 >
                   <View style={[styles.accentBar, { backgroundColor: '#4ADE80' }]} />
@@ -249,14 +240,15 @@ export default function DashboardScreen() {
             )}
           </ListSection>
 
-          <ListSection title="Recent Meals" icon="restaurant" onAddPress={() => setMealModalVisible(true)}>
+          <ListSection title="Recent Meals" icon="restaurant" onSeeAllPress={() => router.push('/planner')}>
             {meals.length === 0 ? (
-              <EmptyState message="No meals logged yet — tap + Add to log one" />
+              <EmptyState message="No meals logged yet — head to Planner to log one" />
             ) : (
               meals.map((m) => (
                 <TouchableOpacity
                   key={m.id}
                   style={styles.listRow}
+                  onPress={() => router.push(`/meal/${m.id}`)}
                   onLongPress={() => handleDeleteMeal(m.id, m.name)}
                 >
                   <View style={[styles.accentBar, { backgroundColor: '#FBBF24' }]} />
@@ -273,17 +265,6 @@ export default function DashboardScreen() {
             )}
           </ListSection>
         </ScrollView>
-
-        <AddWorkoutModal
-          visible={workoutModalVisible}
-          onClose={() => setWorkoutModalVisible(false)}
-          onSave={handleAddWorkout}
-        />
-        <AddMealModal
-          visible={mealModalVisible}
-          onClose={() => setMealModalVisible(false)}
-          onSave={handleAddMeal}
-        />
       </SafeAreaView>
     </LinearGradient>
   );
@@ -353,26 +334,25 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#F5F7FA',
   },
-  addButton: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+  seeAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  addButtonText: {
+  seeAllText: {
     color: '#4ADE80',
-    fontWeight: '700',
+    fontWeight: '600',
     fontSize: 13,
+    marginRight: 2,
   },
   listRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#141A2C',
+    backgroundColor: 'rgba(220,220,225,0.06)',
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(220,220,225,0.09)',
     overflow: 'hidden',
   },
   accentBar: {
@@ -409,12 +389,12 @@ const styles = StyleSheet.create({
     color: '#F5F7FA',
   },
   emptyState: {
-    backgroundColor: '#141A2C',
+    backgroundColor: 'rgba(220,220,225,0.06)',
     borderRadius: 12,
     padding: 20,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(220,220,225,0.09)',
   },
   emptyStateText: {
     color: '#6B7280',
