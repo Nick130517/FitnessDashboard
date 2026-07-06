@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -13,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { AddMealModal, AddWorkoutModal } from '../../components/Modals';
+import ParticleBackground from '../../components/ParticleBackground';
 import {
   addMeal,
   addWorkout,
@@ -120,7 +120,8 @@ export default function PlannerScreen() {
   };
 
   return (
-    <LinearGradient colors={['#0B0F1E', '#0E1326', '#0B0F1E']} style={styles.gradientBg}>
+    <View style={styles.gradientBg}>
+      <ParticleBackground count={18} />
       <SafeAreaView style={styles.container}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -198,12 +199,13 @@ export default function PlannerScreen() {
           onSave={handleAddMeal}
         />
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   gradientBg: {
+    backgroundColor: '#000000',
     flex: 1,
   },
   container: {
@@ -243,7 +245,7 @@ const styles = StyleSheet.create({
     color: '#F5F7FA',
   },
   addButton: {
-    backgroundColor: 'rgba(220,220,225,0.08)',
+    backgroundColor: '#2E2E34',
     borderRadius: 8,
     paddingVertical: 6,
     paddingHorizontal: 12,
@@ -256,12 +258,12 @@ const styles = StyleSheet.create({
   listRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(220,220,225,0.06)',
+    backgroundColor: '#2E2E34',
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(220,220,225,0.09)',
+    borderColor: '#2E2E34',
     overflow: 'hidden',
   },
   accentBar: {
@@ -298,12 +300,12 @@ const styles = StyleSheet.create({
     color: '#F5F7FA',
   },
   emptyState: {
-    backgroundColor: 'rgba(220,220,225,0.06)',
+    backgroundColor: '#2E2E34',
     borderRadius: 12,
     padding: 20,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(220,220,225,0.09)',
+    borderColor: '#2E2E34',
   },
   emptyStateText: {
     color: '#6B7280',

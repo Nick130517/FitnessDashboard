@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import ParticleBackground from '../../components/ParticleBackground';
 
 export default function CoachScreen() {
   return (
-    <LinearGradient colors={['#0B0F1E', '#0E1326', '#0B0F1E']} style={styles.gradientBg}>
+    <View style={styles.gradientBg}>
+      <ParticleBackground count={18} />
       <SafeAreaView style={styles.container}>
         <View style={styles.content}>
           <View style={styles.iconCircle}>
@@ -18,12 +19,12 @@ export default function CoachScreen() {
           </Text>
         </View>
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  gradientBg: { flex: 1 },
+  gradientBg: { flex: 1, backgroundColor: '#000000' },
   container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   content: {
     alignItems: 'center',
@@ -33,7 +34,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 20,
-    backgroundColor: 'rgba(74,222,128,0.12)',
+    backgroundColor: '#2E2E34',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,

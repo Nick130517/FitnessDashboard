@@ -1,18 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import ParticleBackground from '../../components/ParticleBackground';
 import { formatRelativeDate, getMealById, updateMealNotes } from '../../db/db';
 
 export default function MealDetailScreen() {
@@ -40,17 +40,18 @@ export default function MealDetailScreen() {
 
   if (!meal) {
     return (
-      <LinearGradient colors={['#0B0F1E', '#0E1326', '#0B0F1E']} style={styles.gradientBg}>
+      <View style={styles.gradientBg}>
         <Stack.Screen options={{ headerShown: false }} />
         <SafeAreaView style={styles.container}>
           <Text style={styles.notFoundText}>Meal not found</Text>
         </SafeAreaView>
-      </LinearGradient>
+      </View>
     );
   }
 
   return (
-    <LinearGradient colors={['#0B0F1E', '#0E1326', '#0B0F1E']} style={styles.gradientBg}>
+    <View style={styles.gradientBg}>
+      <ParticleBackground count={14} />
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={styles.container}>
         <KeyboardAvoidingView
@@ -105,12 +106,12 @@ export default function MealDetailScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  gradientBg: { flex: 1 },
+  gradientBg: { flex: 1, backgroundColor: '#000000' },
   container: { flex: 1 },
   scrollContent: {
     padding: 20,
@@ -163,10 +164,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   statCard: {
-    backgroundColor: 'rgba(220,220,225,0.06)',
+    backgroundColor: '#2E2E34',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(220,220,225,0.09)',
+    borderColor: '#2E2E34',
     paddingVertical: 16,
     paddingHorizontal: 24,
     alignItems: 'center',
@@ -182,11 +183,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   panel: {
-    backgroundColor: 'rgba(220,220,225,0.06)',
+    backgroundColor: '#2E2E34',
     borderRadius: 18,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(220,220,225,0.09)',
+    borderColor: '#2E2E34',
   },
   panelHeaderRow: {
     flexDirection: 'row',
@@ -207,7 +208,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     minHeight: 140,
     borderWidth: 1,
-    borderColor: 'rgba(220,220,225,0.08)',
+    borderColor: '#2E2E34',
     marginBottom: 14,
     lineHeight: 20,
   },

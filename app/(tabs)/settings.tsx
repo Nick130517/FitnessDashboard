@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -143,7 +142,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <LinearGradient colors={['#0B0F1E', '#0E1326', '#0B0F1E']} style={styles.gradientBg}>
+    <View style={styles.gradientBg}>
       <SafeAreaView style={styles.container}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -242,12 +241,12 @@ export default function SettingsScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  gradientBg: { flex: 1 },
+  gradientBg: { flex: 1, backgroundColor: '#000000' },
   container: { flex: 1 },
   scrollContent: {
     padding: 20,

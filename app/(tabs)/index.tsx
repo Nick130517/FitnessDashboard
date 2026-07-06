@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -13,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { ActivityChart, ActivityDonut, RingCard } from '../../components/DashboardWidgets';
+import ParticleBackground from '../../components/ParticleBackground';
 import {
   deleteMeal,
   deleteWorkout,
@@ -145,7 +145,8 @@ export default function DashboardScreen() {
   const distanceKm = 3.8;
 
   return (
-    <LinearGradient colors={['#0B0F1E', '#0E1326', '#0B0F1E']} style={styles.gradientBg}>
+    <View style={styles.gradientBg}>
+      <ParticleBackground count={18} />
       <SafeAreaView style={styles.container}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -200,7 +201,7 @@ export default function DashboardScreen() {
             />
           </View>
 
-          <LinearGradient colors={['#151B30', '#10152A']} style={styles.panel}>
+          <View style={[styles.panel, { backgroundColor: '#2E2E34' }]}>
             <PanelHeader icon="stats-chart" title="Activity Chart" />
             <ActivityChart
               series={[
@@ -208,12 +209,12 @@ export default function DashboardScreen() {
                 { label: 'Calories', color: '#38BDF8', data: mockWeeklyTrend.calories },
               ]}
             />
-          </LinearGradient>
+          </View>
 
-          <LinearGradient colors={['#151B30', '#10152A']} style={styles.panel}>
+          <View style={[styles.panel, { backgroundColor: '#2E2E34' }]}>
             <PanelHeader icon="pie-chart" title="Activity Rating" />
             <ActivityDonut segments={mockActivityBreakdown} />
-          </LinearGradient>
+          </View>
 
           <ListSection title="Recent Workouts" icon="barbell" onSeeAllPress={() => router.push('/planner')}>
             {workouts.length === 0 ? (
@@ -266,13 +267,14 @@ export default function DashboardScreen() {
           </ListSection>
         </ScrollView>
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   gradientBg: {
     flex: 1,
+    backgroundColor: '#000000',
   },
   container: {
     flex: 1,
@@ -347,12 +349,12 @@ const styles = StyleSheet.create({
   listRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(220,220,225,0.06)',
+    backgroundColor: '#2E2E34',
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(220,220,225,0.09)',
+    borderColor: '#2E2E34',
     overflow: 'hidden',
   },
   accentBar: {
@@ -389,12 +391,12 @@ const styles = StyleSheet.create({
     color: '#F5F7FA',
   },
   emptyState: {
-    backgroundColor: 'rgba(220,220,225,0.06)',
+    backgroundColor: '#2E2E34',
     borderRadius: 12,
     padding: 20,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(220,220,225,0.09)',
+    borderColor: '#2E2E34',
   },
   emptyStateText: {
     color: '#6B7280',
